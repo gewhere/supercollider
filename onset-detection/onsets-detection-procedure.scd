@@ -45,19 +45,13 @@
 )
 // IOI
 (
-	v = FilteredIOI(k.mergeOnsets);
-	v.outputArray.size;
-	w = FilteredIOI(l.mergeOnsets);
-	w.outputArray.size;
-)
-//
-(
-	f = FilteredIOI(v.outputArray);
+	f = FilteredIOI(k.mergeOnsets);
 	f.outputArray.size;
-	g = FilteredIOI(w.outputArray);
+	g = FilteredIOI(l.mergeOnsets);
 	g.outputArray.size;
 )
 // Run this multiple times if needed
+// If this stops to a specific value than means that the algorithm suceed
 (
 	f = FilteredIOI(f.outputArray);
 	f.outputArray.size;
