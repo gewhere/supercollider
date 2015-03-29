@@ -1,2 +1,2 @@
-# supercollider
-- Check supercollider.github.io
+# SuperCollider
+- Check [SuperCollider homepage](https://supercollider.github.io)
