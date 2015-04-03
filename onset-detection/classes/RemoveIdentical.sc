@@ -1,11 +1,6 @@
 RemoveIdentical {
-
-	//var <>arrayL, <>arrayR;
-	//var <>id, <>diff;
 	var <>arrayLeft;
 	var <>arrayRight;
-	//var <>tmpElem;
-	//var <>tmpList;
 
 	*new { | arrayL, arrayR, id=0.050 |
 		// id => time between identical onsets in the two arrays LR
@@ -17,21 +12,18 @@ RemoveIdentical {
 	}
 
 	removeElements { | arrayL, arrayR, id=0.050 |
-		var copyLeft = [];
-		var copyRight = [];
-
-		var tmp;
-		var dict = IdentityDictionary.new;
-
-
+		var copyLeft;
+		var copyRight;
 		var currDiff;
+		var tmp;
+		
 		var counter = 0;
-		// remove elements based on IOI (first ranking)
-		// remove elements based on weights (second ranking)
+		var dict = IdentityDictionary.new;
 
 		copyLeft = arrayL;
 		copyRight = arrayR;
 
+		// put in a staged state elements which have IOI less than threshold (id) (first condition)
 		arrayL.size do: { |i|
 			arrayR.size do: { |j|
 				currDiff = ( copyLeft[i][0] - copyRight[j][0] ).abs;
@@ -41,13 +33,13 @@ RemoveIdentical {
 				};
 			};
 		};
+		"dict: ".post; dict.postln;
 
-		"tmpDict: ".post; dict.postln;
-
+		// remove elements based on weights (second condition) [onsets_value, onset_weight]
 		dict.size do: { |k|
 			tmp = dict.at( k.asSymbol );
 			"tmp: ".post; tmp.postln;
-
+			// this block compares the weights
 			case
 			{ copyLeft[ tmp[0] ][ 1 ] < copyRight[ tmp[1] ][ 1 ] }{
 				copyLeft[ tmp[0] ] = nil;
@@ -57,13 +49,10 @@ RemoveIdentical {
 			};
 
 		};
-
 		arrayLeft = copyLeft.removeNils;
 		"arrayLeft.size = ".post; arrayLeft.size.postln;
 		//
 		arrayRight = copyRight.removeNils;
 		"arrayRight.size = ".post; arrayRight.size.postln;
-
 	}
-
 }
