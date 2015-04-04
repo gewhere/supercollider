@@ -1,7 +1,7 @@
 +Array {
 	arrayToDict {
 		var array;
-		var dict = IdentityDictionary.new;
+		var dict = Dictionary.new;
 		
 		if( this.notNil && this.isArray ){
 			array = this;

@@ -12,13 +12,13 @@ RemoveIdentical {
 	}
 
 	removeElements { | arrayL, arrayR, id=0.050 |
-		var copyLeft;
-		var copyRight;
 		var currDiff;
 		var tmp;
-		
-		var counter = 0;
-		var dict = IdentityDictionary.new;
+		var tmpLeft, tmpRight, checkLeft, checkRight;
+		var copyLeft;
+		var copyRight;
+		var cnt = 0;
+		var dict = Dictionary.new;
 
 		copyLeft = arrayL;
 		copyRight = arrayR;
@@ -28,24 +28,28 @@ RemoveIdentical {
 			arrayR.size do: { |j|
 				currDiff = ( copyLeft[i][0] - copyRight[j][0] ).abs;
 				if ( currDiff < id ) {
-					dict.put( counter.asSymbol, [i, j] );
-					counter = counter + 1;
+					dict.put( ('L'++cnt).asSymbol, i ); // put elements of Left array
+					dict.put( ('R'++cnt).asSymbol, j ); // put elements of Right array
+					cnt = cnt + 1;
 				};
 			};
 		};
 		"dict: ".post; dict.postln;
+		//
 
 		// remove elements based on weights (second condition) [onsets_value, onset_weight]
-		dict.size do: { |k|
-			tmp = dict.at( k.asSymbol );
-			"tmp: ".post; tmp.postln;
-			// this block compares the weights
+		( dict.size/2 ) do: { |k|
+			tmpLeft = dict.at( ('L'++k).asSymbol ); // this is i (see line:31)
+			tmpRight = dict.at( ('R'++k).asSymbol ); // this is j (see line:32)
+			"tmpLeft: ".post; tmpLeft.postln;
+			"tmpRight: ".post; tmpRight.postln;
+			// this block compares the weights ( copyLeft/Right are (1x2) arrays )
 			case
-			{ copyLeft[ tmp[0] ][ 1 ] < copyRight[ tmp[1] ][ 1 ] }{
-				copyLeft[ tmp[0] ] = nil;
+			{ copyLeft[ tmpLeft ][ 1 ] < copyRight[ tmpRight ][ 1 ] }{
+				copyLeft[ tmpLeft ] = nil;
 			}
-			{ copyLeft[ tmp[0] ][ 1 ] > copyRight[ tmp[1] ][ 1 ] }{
-				copyRight[ tmp[1] ] = nil;
+			{ copyLeft[ tmpLeft ][ 1 ] > copyRight[ tmpRight ][ 1 ] }{
+				copyRight[ tmpRight ] = nil;
 			};
 
 		};
