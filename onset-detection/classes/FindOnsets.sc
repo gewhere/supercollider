@@ -1,103 +1,94 @@
-FindOnsets { // DIVIDE THE FLOW ON LEFT & RIGHT CHANNEL AND MERGE ON REMOVEIDENTICAL
-	var <take;
-	var <numOfFiles;
+FindOnsets {
+
 	var <>dataLeft, <>dataRight;
-	var <>weightsLeft, <>weightsRight;
-	var <>onsetsLeft, <>onsetsRight;
-	var <>ioi;
-	var <>threshold=0.150; // 100ms
-	var counter = 0;
-	var <>plotLeft, <>plotRight;
-	// DIVIDE THE FLOW ON LEFT & RIGHT CHANNEL AND MERGE ON REMOVEIDENTICAL
-	*new { | path, dyad, take, numOfFiles, window=0.55, removeNoise=25, diff=0.125 |
-		^super.new.init(path, dyad, take, numOfFiles, window, removeNoise)
+	var <left, <right;
+
+	*new { | path, dyad, take, numOfFiles, window=0.065, outliers=40, diff=0.030 |
+		^super.new.init(path, dyad, take, numOfFiles, window, outliers, diff)
 	}
 
-	init { | path, dyad, take, numOfFiles, window=0.55, removeNoise=25, diff=0.125 |
-		this.populateData(path, dyad, take, numOfFiles, window, removeNoise, diff);
-		// this.computeOnsets(path, dyad, take, numOfFiles, window, removeNoise)
+	init { | path, dyad, take, numOfFiles, window=0.065, outliers=40, diff=0.030 |
+		this.computeOnsets(path, dyad, take, numOfFiles, window, outliers, diff);
 	}
 
-	populateData { | path, dyad, take, numOfFiles, window=0.55, removeNoise=25, diff=0.125 |
-		var pathLeft, pathRight;
-		// path = "/path/to/root/folder/", dyad="dyad7", numOfFiles=405
-		pathLeft = path ++ dyad ++ "_L_" ++ numOfFiles.asString ++ "/" ++ dyad ++ "_L." ++ take.asString ++ "-";
-		pathRight = path ++ dyad ++ "_R_" ++ numOfFiles.asString ++ "/" ++ dyad ++ "_R." ++ take.asString ++ "-";
-
-		//
-		{
-			dataLeft = PopulatedDataPatch(pathLeft, numOfFiles);
-			dataRight = PopulatedDataPatch(pathRight, numOfFiles);
-
-			if ( (dataLeft.notNil) && (dataRight.notNil) ){
-				this.weightedOnsets(dataLeft.array, dataRight.array, window, removeNoise, diff);
-			}
-		}.defer;
+	computeOnsets { | path, dyad, take, numOfFiles, window=0.065, outliers=40, diff=0.030 |
+		var outLeft;
+		var outRight;
+	
+		// PopulatedData for Left channel
+		dataLeft = this.populateData( path, dyad, "L", take, numOfFiles, window, outliers, diff );
+		"dataLeft: ".post; dataLeft.postln;
+		// PopulatedData for Right channel
+		dataRight = this.populateData( path, dyad, "R", take, numOfFiles, window, outliers, diff );
+		"dataRight: ".post; dataRight.postln;
+		outLeft = this.removeNoise(dataLeft, window, outliers);
+		outRight = this.removeNoise(dataRight, window, outliers);
+		// calling RemoveIdentical
+		this.removeIdentical(outLeft, outRight, window);
 	}
 
-	weightedOnsets { | dataLeft, dataRight, window=0.55, removeNoise=25, diff=0.125 |
-		weightsLeft = WeightedOnsets(dataLeft, window);
-		weightsRight = WeightedOnsets(dataRight, window);
-
-		"weightsLeft: ".post; weightsLeft.removeOutliers(removeNoise).postln;
-		"weightsRight: ".post; weightsRight.removeOutliers(removeNoise).postln;
-		//
-		this.removeIdentical(weightsLeft.removeOutliers(removeNoise), weightsRight.removeOutliers(removeNoise), diff);
+	populateData { | path, dyad, channel, take, numOfFiles, window=0.065, outliers=40, diff=0.030 |
+		var which;
+		var tmp;
+		var data;
+		// var which holds the path of the waveFiles
+		which = path ++ "dyad" ++ dyad ++ "_" ++ channel ++ "." ++ take ++ "-";
+		tmp = PopulatedData(which, numOfFiles);
+		data = tmp.array;
+		^data
 	}
 
-	removeIdentical{ | idLeft, idRight, diff=0.125 |
-		// diff is in seconds => 100ms for 0.100
-		var uniqueOnsets;
-		
-		uniqueOnsets = RemoveIdenticalPoints(idLeft, idRight, diff);
-		onsetsLeft = uniqueOnsets.arrayLeft;
-		onsetsRight = uniqueOnsets.arrayRight;
-		// RemoveIdentical prints => arrayLeft.size & arrayRight.size
-		"onsetsLeft: ".post; onsetsLeft.postln;
-		"onsetsRight: ".post; onsetsRight.postln;
-		this.computeIOI(onsetsLeft, onsetsRight);
+	removeNoise { | array, window=0.065, outliers=40 |
+		var tmp;
+		var out;
+		// RemoveNoise is the algorithm for merging the onsets
+		tmp = RemoveNoise(array, window);
+		tmp.removeOutliers(outliers);
+		out = tmp.outputArray;
+		"HEI".postln;
+		^out
 	}
 
-	computeIOI { | ioiLeft, ioiRight |
-		ioi = InterOnsetsPatch(ioiLeft, ioiRight);
-		if( ( ioi.ioiLeftMean - ioi.ioiRightMean ).abs < threshold ) {
-			"SUCCEED".postln;
-			//this.makePlot(sndFilePath, )
-		}{
-			if ( ioi.ioiLeftMean > ioi.ioiRightMean ) {
-				this.mergeOnsets( onsetsRight, 1 )
+	removeIdentical { | arrayLeft, arrayRight |
+		var tmp;
+		var tmpLeft;
+		var tmpRight;
+
+		tmp = RemoveIdentical(arrayLeft, arrayRight, 0.030);
+		"tmp.arrayLeft: ".post; tmp.arrayLeft.size.postln;
+		"tmp.arrayRight: ".post; tmp.arrayRight.size.postln;
+		// here I repeat the step RemoveNoise
+		tmpLeft = RemoveNoise(tmp.arrayLeft, 0.120);
+		tmpRight = RemoveNoise(tmp.arrayRight, 0.120);
+		// now I don't have to .removeOutliers (as in removeNoise method)
+		// so proceeding to .mergeOnsets instead
+		left = this.filteredIOI(tmpLeft.mergeOnsets, "left");
+		right = this.filteredIOI(tmpRight.mergeOnsets, "right");
+	}
+
+	filteredIOI { | array, channel |
+		var tmp;
+		var old;
+		var i=0;
+
+		tmp = FilteredIOI(array);
+		old = array.size; // => this is assigned to tmpSize
+		"old: ".post; old.postln;
+		// this is a fast solution assuming that the FilteredIOI does not need no more that 5 repetitions
+		// try to implement this using while loop 
+		5 do: { |i|
+			tmp = FilteredIOI(tmp.outputArray);
+			//
+			if (channel == "left"){
+				" LEFT CHANNEL <<<<<<<<".postln;
 			}{
-				this.mergeOnsets( onsetsLeft, 0 )
+				" RIGHT CHANNEL <<<<<<<<".postln;
 			};
+			old = tmp.size;
+			tmp.outputArray.size.postln;
 		};
-	}
-
-	mergeOnsets { | array, which, diff=0.100 |
-		var whichChannel;
-		var currDiff = diff;
-		counter = counter + 1;
-		"How many times visits this method: ".post; counter.postln;
-		currDiff = currDiff + ( counter/100 );
-		"diff = ".post; currDiff.postln;
-
-		whichChannel = MergeOnsetsPatch( array, currDiff );
-		
-
-		if( which == 0 ){
-			this.computeIOI( whichChannel.outputArray, onsetsRight )
-		}{
-			this.computeIOI( onsetsLeft, whichChannel.outputArray )
-		}
-		
-	}
-
-	makePlot { | sndFilePath, take, onsetsLeft, onsetsRight |
-
-		plotLeft = PlotOnsets(sndFilePath ++ take.asString ++".L.wav");
-		plotRight = PlotOnsets(sndFilePath ++ take.asString ++".R.wav");
-
-		plotLeft.plotOnsets(onsetsLeft, "set title \"Left Channel\"");
-		plotRight.plotOnsets(onsetsRight, "set title \"Right Channel\"");
+		// return the output array using a = FindOnsets(); a.left; OR a.right;
+		^tmp.outputArray;		
 	}
 
 }
