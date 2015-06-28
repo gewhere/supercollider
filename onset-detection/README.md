@@ -9,3 +9,5 @@ The folder batch-extraction contains the language-side files for the batch proce
 
 ## Statistical analysis
 The folder classes contains all the classes.  The final product is the `FindOnsets.sc` class.  The demo for the lang-side is the `demo-FindOnsets.scd` file.  The files `demo-model.scd` and `onsets-detection-procedure.scd` are precursors that led the development of the `FindOnsets.sc` class.
+
+- Tested on Arch Linux, SuperCollider 3.6.6
