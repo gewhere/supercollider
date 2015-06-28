@@ -4,7 +4,7 @@
 ~path = "/home/aucotsi/data/onsetsData/onsetsDyads/dyads_LR_411/"; // dyad7_L_108
 ~take="24";
 )
-a = FindOnsets(path: ~path, dyad: ~dyad, take: ~take, numOfFiles:411, window:0.065, outliers: 40);
+a = FindOnsets2(path: ~path, dyad: ~dyad, take: ~take, numOfFiles:411, window:0.065, outliers: 40);
 (
 a.left.postln;
 a.left.size.postln;

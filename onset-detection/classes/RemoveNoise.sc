@@ -46,25 +46,3 @@ RemoveNoise {
 	}
 
 }
-
-// ======================================================================================= //
-				/* This should implemented after RomoveIdenticals
-				{ // this looks if there is any element in the double size of the window (diff), if finds one it divided its weights by 2
-					if ( ( (mergeOnsets[cnt][0] - mergeOnsets[cnt-1][0]) > diff ) && ( (mergeOnsets[cnt][0] - mergeOnsets[cnt-1][0]) < (1.5*diff) ) ) {
-						weights = ( 2*mergeOnsets[cnt-1][1] ) + mergeOnsets[cnt][1];
-						item = ( 2*mergeOnsets[cnt-1][0]*( (2*mergeOnsets[cnt-1][1]) / weights ) ) + ( mergeOnsets[cnt][0]*( mergeOnsets[cnt][1] / weights ) ).round(0.001);
-						mergeOnsets.put(cnt-1, [item, weights]);
-						mergeOnsets.removeAt(cnt);
-						cnt = cnt - 1;
-					}{
-						if ( ( (mergeOnsets[cnt][0] - mergeOnsets[cnt-1][0]) > (1.5*diff) ) && ( (mergeOnsets[cnt][0] - mergeOnsets[cnt-1][0]) < (2.0*diff) ) )  {
-							weights = ( 4*mergeOnsets[cnt-1][1] ) + mergeOnsets[cnt][1];
-							item = ( 4*mergeOnsets[cnt-1][0]*( (4*mergeOnsets[cnt-1][1]) / weights ) ) + ( mergeOnsets[cnt][0]*( mergeOnsets[cnt][1] / weights ) ).round(0.001);
-							mergeOnsets.put(cnt-1, [item, weights]);
-							mergeOnsets.removeAt(cnt);
-							cnt = cnt - 1;
-						}
-					};
-
-				};
-				*/
